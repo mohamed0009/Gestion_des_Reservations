@@ -1,85 +1,87 @@
 package com.emsi.utils;
 
-import com.emsi.entities.Reservation;
+import com.emsi.entities.Client;
 import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.*;
-import org.jfree.chart.JFreeChart;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
+import com.itextpdf.text.pdf.PdfWriter;
+import org.jfree.chart.ChartPanel;
+
+import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileOutputStream;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class PDFExporter {
 
-    public void exportStatistics(String filePath, int year, int clientId,
-            List<Reservation> reservations, StatisticsUtil statisticsUtil) {
+    public void exportStatistics(Client client, String year, ChartPanel categoryChart, ChartPanel timeChart) {
         try {
-            Document document = new Document();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filePath));
-            document.open();
+            // Create file chooser
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Statistics Report");
 
-            // Add title
-            Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
-            Paragraph title = new Paragraph("Statistics Report - Year " + year, titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-            document.add(new Paragraph("\n"));
-
-            // Add charts
-            JFreeChart roomsChart = statisticsUtil.createRoomsByCategoryChart(year, clientId);
-            JFreeChart timeChart = statisticsUtil.createReservationsOverTimeChart(year, clientId);
-
-            // Convert charts to images and add to PDF
-            float width = document.getPageSize().getWidth() - 40;
-            float height = 300;
-
-            PdfContentByte contentByte = writer.getDirectContent();
-            PdfTemplate template = contentByte.createTemplate(width, height);
-            Graphics2D graphics = template.createGraphics(width, height);
-
-            Rectangle2D rect = new Rectangle2D.Double(0, 0, width, height);
-
-            roomsChart.draw(graphics, rect);
-            graphics.dispose();
-            Image chartImage = Image.getInstance(template);
-            document.add(chartImage);
-            document.add(new Paragraph("\n"));
-
-            template = contentByte.createTemplate(width, height);
-            graphics = template.createGraphics(width, height);
-            timeChart.draw(graphics, rect);
-            graphics.dispose();
-            chartImage = Image.getInstance(template);
-            document.add(chartImage);
-
-            // Add reservations table
-            PdfPTable table = new PdfPTable(4);
-            table.setWidthPercentage(100);
-            table.setSpacingBefore(10f);
-            table.setSpacingAfter(10f);
-
-            // Add table headers
-            table.addCell("Room");
-            table.addCell("Check-in");
-            table.addCell("Check-out");
-            table.addCell("Status");
-
-            // Add reservation data
-            for (Reservation res : reservations) {
-                if (res.getClientId() == clientId) {
-                    table.addCell(String.valueOf(res.getChamberId()));
-                    table.addCell(res.getDateDebut().toString());
-                    table.addCell(res.getDateFin().toString());
-                    table.addCell(res.getStatus());
+            if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.toLowerCase().endsWith(".pdf")) {
+                    filePath += ".pdf";
                 }
+
+                Document document = new Document();
+                PdfWriter.getInstance(document, new FileOutputStream(filePath));
+                document.open();
+
+                // Add title
+                Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+                Paragraph title = new Paragraph("Reservation Statistics Report", titleFont);
+                title.setAlignment(Element.ALIGN_CENTER);
+                document.add(title);
+                document.add(new Paragraph("\n"));
+
+                // Add client info
+                Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+                document.add(new Paragraph("Client: " + client.getNom() + " " + client.getPrenom(), normalFont));
+                document.add(new Paragraph("Year: " + year, normalFont));
+                document.add(new Paragraph(
+                        "Generated on: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), normalFont));
+                document.add(new Paragraph("\n"));
+
+                // Add charts
+                if (categoryChart != null) {
+                    BufferedImage categoryImage = new BufferedImage(
+                            categoryChart.getWidth(),
+                            categoryChart.getHeight(),
+                            BufferedImage.TYPE_INT_RGB);
+                    categoryChart.paint(categoryImage.createGraphics());
+                    Image chartImage = Image.getInstance(categoryImage, null);
+                    chartImage.scaleToFit(500, 300);
+                    document.add(chartImage);
+                    document.add(new Paragraph("\n"));
+                }
+
+                if (timeChart != null) {
+                    BufferedImage timeImage = new BufferedImage(
+                            timeChart.getWidth(),
+                            timeChart.getHeight(),
+                            BufferedImage.TYPE_INT_RGB);
+                    timeChart.paint(timeImage.createGraphics());
+                    Image chartImage = Image.getInstance(timeImage, null);
+                    chartImage.scaleToFit(500, 300);
+                    document.add(chartImage);
+                }
+
+                document.close();
+
+                JOptionPane.showMessageDialog(null,
+                        "Statistics report exported successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
-
-            document.add(table);
-            document.close();
-
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to export PDF: " + e.getMessage());
+            JOptionPane.showMessageDialog(null,
+                    "Error exporting statistics: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 }

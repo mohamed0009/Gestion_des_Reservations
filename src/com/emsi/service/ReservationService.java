@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ReservationService {
 	private JTable table; // Reference to the UI table
@@ -273,5 +275,95 @@ public class ReservationService {
 			System.err.println("Error finding reservation by ID: " + e.getMessage());
 		}
 		return null;
+	}
+
+	public Map<String, Integer> getReservationsByCategory(int clientId, int year) {
+		Map<String, Integer> categoryStats = new HashMap<>();
+		String sql = "SELECT cat.libelle, COUNT(*) as count " +
+				"FROM reservation r " +
+				"JOIN chambre ch ON r.chamber_id = ch.id " +
+				"JOIN categorie cat ON ch.categorie_id = cat.id " +
+				"WHERE r.client_id = ? " +
+				"AND YEAR(r.date_debut) = ? " +
+				"GROUP BY cat.libelle";
+
+		try (Connection conn = ConnectionJdbc.getCnx();
+				PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+			stmt.setInt(1, clientId);
+			stmt.setInt(2, year);
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				categoryStats.put(rs.getString("libelle"), rs.getInt("count"));
+			}
+		} catch (SQLException e) {
+			System.err.println("Error getting reservation statistics by category: " + e.getMessage());
+		}
+		return categoryStats;
+	}
+
+	public Map<String, Integer> getReservationsOverTime(int clientId, int year) {
+		Map<String, Integer> monthlyStats = new HashMap<>();
+		// Initialize all months with 0
+		String[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+				"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+		for (String month : months) {
+			monthlyStats.put(month, 0);
+		}
+
+		String sql = "SELECT MONTH(date_debut) as month, COUNT(*) as count " +
+				"FROM reservation " +
+				"WHERE client_id = ? " +
+				"AND YEAR(date_debut) = ? " +
+				"GROUP BY MONTH(date_debut)";
+
+		try (Connection conn = ConnectionJdbc.getCnx();
+				PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+			stmt.setInt(1, clientId);
+			stmt.setInt(2, year);
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				int monthNum = rs.getInt("month");
+				monthlyStats.put(months[monthNum - 1], rs.getInt("count"));
+			}
+		} catch (SQLException e) {
+			System.err.println("Error getting reservation statistics over time: " + e.getMessage());
+		}
+		return monthlyStats;
+	}
+
+	public List<Reservation> findByClient(Client client) {
+		List<Reservation> reservations = new ArrayList<>();
+		String query = "SELECT * FROM reservation WHERE client_id = ?";
+
+		try (Connection connection = ConnectionJdbc.getCnx();
+				PreparedStatement ps = connection.prepareStatement(query)) {
+
+			ps.setInt(1, client.getId());
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				Reservation reservation = new Reservation();
+				reservation.setId(rs.getInt("id"));
+				reservation.setClientId(rs.getInt("client_id"));
+				reservation.setChamberId(rs.getInt("chamber_id"));
+				reservation.setDateDebut(rs.getDate("date_debut"));
+				reservation.setDateFin(rs.getDate("date_fin"));
+				reservation.setStatus(rs.getString("status"));
+
+				// Load associated client and chamber
+				reservation.setClient(client);
+				reservation.setChamber(new ChamberService().findById(rs.getInt("chamber_id")));
+
+				reservations.add(reservation);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return reservations;
 	}
 }

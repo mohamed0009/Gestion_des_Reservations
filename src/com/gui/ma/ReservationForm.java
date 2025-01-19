@@ -7,8 +7,10 @@ package com.gui.ma;
 import com.emsi.entities.*;
 import com.emsi.service.*;
 import com.gui.utils.StyleUtils;
+import com.gui.utils.IconUtils;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -27,12 +29,26 @@ public class ReservationForm extends JInternalFrame {
     private JDateChooser dateDebutChooser;
     private JDateChooser dateFinChooser;
     private JButton submitButton;
+    private JButton addreservation;
+    private JButton jButton2;
+    private JButton jButton3;
+    private JTable listereservation;
+    private JTextField clienttxt;
+    private JTextField chambertxt;
+    private JLabel jLabel1;
+    private JLabel jLabel2;
+    private JLabel jLabel3;
+    private JLabel jLabel4;
+    private JPanel jPanel1;
+    private JPanel jPanel2;
+    private JPanel jPanel3;
 
     private ClientService clientService;
     private ChamberService chamberService;
     private ReservationService reservationService;
 
     private Client currentClient;
+    private DefaultTableModel model;
 
     // Helper classes for ComboBox items
     private static class ClientComboItem {
@@ -93,7 +109,32 @@ public class ReservationForm extends JInternalFrame {
 
     // Default constructor for admin use
     public ReservationForm() {
-        this(null);
+        reservationService = new ReservationService();
+        clientService = new ClientService();
+        chamberService = new ChamberService();
+
+        // Set basic properties first
+        setTitle("Gestion des Réservations");
+        setResizable(true);
+        setClosable(true);
+        setMaximizable(true);
+        setIconifiable(true);
+        IconUtils.setInternalFrameIcon(this, IconUtils.RESERVATION_ICON);
+
+        // Initialize components
+        initComponents();
+        applyStyles();
+
+        // Set minimum size
+        setMinimumSize(new Dimension(800, 600));
+
+        // Initialize the table model
+        model = (DefaultTableModel) listereservation.getModel();
+        load();
+
+        // Pack and set size after all components are initialized
+        pack();
+        setSize(800, 600);
     }
 
     private void initializeServices() {
@@ -229,6 +270,19 @@ public class ReservationForm extends JInternalFrame {
                     "Reservation created successfully!",
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
+
+            // Refresh the parent dashboard
+            Container parent = this.getParent();
+            if (parent instanceof JDesktopPane) {
+                JDesktopPane desktop = (JDesktopPane) parent;
+                for (JInternalFrame frame : desktop.getAllFrames()) {
+                    if (frame instanceof ClientDashboard) {
+                        ((ClientDashboard) frame).loadClientData();
+                        break;
+                    }
+                }
+            }
+
             dispose();
         } else {
             JOptionPane.showMessageDialog(this,
@@ -280,5 +334,67 @@ public class ReservationForm extends JInternalFrame {
         chamberCombo.setSelectedIndex(-1);
         dateDebutChooser.setDate(null);
         dateFinChooser.setDate(null);
+    }
+
+    private void applyStyles() {
+        // Style the panels
+        StyleUtils.stylePanel(jPanel1);
+        StyleUtils.stylePanel(jPanel2);
+        StyleUtils.stylePanel(jPanel3);
+
+        // Style text fields
+        StyleUtils.styleTextField(clienttxt);
+        StyleUtils.styleTextField(chambertxt);
+
+        // Style labels
+        StyleUtils.styleLabel(jLabel1);
+        StyleUtils.styleLabel(jLabel2);
+        StyleUtils.styleLabel(jLabel3);
+        StyleUtils.styleLabel(jLabel4);
+
+        // Style buttons
+        addreservation.setText("Ajouter Réservation");
+        jButton2.setText("Modifier Réservation");
+        jButton3.setText("Supprimer Réservation");
+
+        StyleUtils.styleButton(addreservation, StyleUtils.PRIMARY_COLOR);
+        StyleUtils.styleButton(jButton2, StyleUtils.SUCCESS_COLOR);
+        StyleUtils.styleButton(jButton3, StyleUtils.DANGER_COLOR);
+
+        // Style date choosers
+        dateDebutChooser.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        dateFinChooser.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Style table
+        StyleUtils.styleTable(listereservation);
+    }
+
+    public void load() {
+        model.setRowCount(0);
+        if (currentClient != null) {
+            // Load only reservations for current client
+            for (Reservation reservation : reservationService.findByClient(currentClient)) {
+                model.addRow(new Object[] {
+                        reservation.getId(),
+                        reservation.getClient().getNom() + " " + reservation.getClient().getPrenom(),
+                        reservation.getChamber().getTelephone(),
+                        reservation.getDateDebut(),
+                        reservation.getDateFin(),
+                        reservation.getStatus()
+                });
+            }
+        } else {
+            // Load all reservations for admin
+            for (Reservation reservation : reservationService.findAll()) {
+                model.addRow(new Object[] {
+                        reservation.getId(),
+                        reservation.getClient().getNom() + " " + reservation.getClient().getPrenom(),
+                        reservation.getChamber().getTelephone(),
+                        reservation.getDateDebut(),
+                        reservation.getDateFin(),
+                        reservation.getStatus()
+                });
+            }
+        }
     }
 }

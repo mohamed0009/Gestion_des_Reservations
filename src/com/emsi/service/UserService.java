@@ -166,8 +166,7 @@ public class UserService {
 
     public User findById(int id) {
         String sql = "SELECT * FROM user WHERE id = ?";
-        try (Connection conn = ConnectionJdbc.getCnx();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
@@ -176,6 +175,7 @@ public class UserService {
             }
         } catch (SQLException e) {
             System.err.println("Error finding user by ID: " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }

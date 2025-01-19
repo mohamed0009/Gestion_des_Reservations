@@ -5,6 +5,7 @@
 package com.gui.ma;
 
 import com.gui.utils.StyleUtils;
+import com.gui.utils.IconUtils;
 import com.emsi.entities.User;
 import com.emsi.entities.Client;
 import com.emsi.service.ClientService;
@@ -34,7 +35,7 @@ public class Main extends javax.swing.JFrame {
             customizeUIDefaults();
             setExtendedState(JFrame.MAXIMIZED_BOTH); // Start maximized
             setMinimumSize(new Dimension(1200, 800));
-            setIconImage(new ImageIcon(getClass().getResource("/com/gui/ma/icons/default.png")).getImage());
+            IconUtils.setFrameIcon(this, IconUtils.APP_ICON);
         } catch (Exception e) {
             // Silently fail if icon cannot be loaded
             System.out.println("Could not load application icon");
@@ -44,6 +45,7 @@ public class Main extends javax.swing.JFrame {
         this.setTitle("LuxeStay Manager");
         this.setLocationRelativeTo(null);
         setupMenuAccess();
+        setupIcons();
 
         // Create a gradient background for desktopPane
         desktopPane.setBackground(StyleUtils.BACKGROUND_COLOR);
@@ -54,6 +56,7 @@ public class Main extends javax.swing.JFrame {
             desktopPane.add(dashboard);
             dashboard.setSize(desktopPane.getWidth(), desktopPane.getHeight());
             dashboard.setLocation(0, 0);
+            dashboard.setVisible(true);
         } else {
             // Get Client object for the current user
             ClientService clientService = new ClientService();
@@ -69,6 +72,7 @@ public class Main extends javax.swing.JFrame {
             desktopPane.add(dashboard);
             dashboard.setSize(desktopPane.getWidth(), desktopPane.getHeight());
             dashboard.setLocation(0, 0);
+            dashboard.setVisible(true);
         }
 
         // Personnaliser le menu
@@ -120,6 +124,18 @@ public class Main extends javax.swing.JFrame {
             editMenu.setVisible(false);
             helpMenu.setVisible(false);
         }
+    }
+
+    private void setupIcons() {
+        // Set menu icons
+        fileMenu.setIcon(IconUtils.resizeIcon(IconUtils.DASHBOARD_ICON, 20, 20));
+        editMenu.setIcon(IconUtils.resizeIcon(IconUtils.STATS_ICON, 20, 20));
+
+        // Set menu item icons
+        openMenuItem.setIcon(IconUtils.resizeIcon(IconUtils.CLIENT_ICON, 16, 16));
+        saveMenuItem.setIcon(IconUtils.resizeIcon(IconUtils.ROOM_ICON, 16, 16));
+        saveAsMenuItem.setIcon(IconUtils.resizeIcon(IconUtils.RESERVATION_ICON, 16, 16));
+        exitMenuItem.setIcon(IconUtils.resizeIcon(IconUtils.CATEGORY_ICON, 16, 16));
     }
 
     private void styleMenu(JMenu menu) {
@@ -272,17 +288,28 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
     }// GEN-LAST:event_saveMenuItemActionPerformed
 
-    private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_openMenuItemActionPerformed
+    private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         if ("admin".equals(currentUser.getRole())) {
             ClientForm cf = new ClientForm();
+            // Set size and center the form
+            cf.setSize(800, 600);
+            // Center the form in the desktop pane
+            Dimension desktopSize = desktopPane.getSize();
+            Dimension frameSize = cf.getSize();
+            cf.setLocation((desktopSize.width - frameSize.width) / 2,
+                    (desktopSize.height - frameSize.height) / 2);
             desktopPane.add(cf);
             cf.setVisible(true);
+            try {
+                cf.setSelected(true);
+            } catch (java.beans.PropertyVetoException e) {
+            }
         } else {
             ClientProfileForm cpf = new ClientProfileForm(currentUser);
             desktopPane.add(cpf);
             cpf.setVisible(true);
         }
-    }// GEN-LAST:event_openMenuItemActionPerformed
+    }
 
     private void saveAsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_saveAsMenuItemActionPerformed
         // TODO add your handling code here:
@@ -364,9 +391,9 @@ public class Main extends javax.swing.JFrame {
         helpMenu.setVisible(isAdmin);
 
         // Client can only see:
-        // - Their profile (openMenuItem - Clients Management)
+        // - Their profile (openMenuItem - Client Profile)
         // - Make reservations (saveAsMenuItem - Reservations)
-        openMenuItem.setText(isAdmin ? "Clients Management" : "My Profile");
+        openMenuItem.setText(isAdmin ? "Clients Management" : "Client Profile");
         saveAsMenuItem.setText(isAdmin ? "Reservations" : "Book a Room");
     }
 

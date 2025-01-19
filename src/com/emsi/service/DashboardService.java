@@ -49,13 +49,18 @@ public class DashboardService {
     }
 
     public double getTodayRevenue() {
-        String sql = "SELECT SUM(total_price) FROM reservation " +
-                "WHERE DATE(date_debut) = CURRENT_DATE AND status = 'confirmed'";
+        // Calculate revenue using the price from categorie table
+        String sql = "SELECT SUM(cat.prix * DATEDIFF(r.date_fin, r.date_debut)) as total " +
+                "FROM reservation r " +
+                "JOIN chambre ch ON r.chamber_id = ch.id " +
+                "JOIN categorie cat ON ch.categorie_id = cat.id " +
+                "WHERE DATE(r.date_debut) = CURRENT_DATE AND r.status = 'confirmed'";
         try (Connection conn = ConnectionJdbc.getCnx();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
-                return rs.getDouble(1);
+                Double total = rs.getDouble("total");
+                return total != null ? total : 0.0;
             }
         } catch (SQLException e) {
             System.err.println("Error getting today's revenue: " + e.getMessage());
@@ -65,18 +70,19 @@ public class DashboardService {
 
     public List<Map<String, String>> getRecentActivity() {
         List<Map<String, String>> activities = new ArrayList<>();
+
         String sql = "SELECT 'Reservation' as type, " +
-                "CONCAT('Room #', ch.telephone, ' (', cat.libelle, ')') as description, " +
-                "COALESCE(created_at, date_debut) as date " +
+                "CONCAT(c.nom, ' ', c.prenom, ' - Room ', ch.telephone) as description, " +
+                "r.date_debut as date " +
                 "FROM reservation r " +
+                "JOIN client c ON r.client_id = c.id " +
                 "JOIN chambre ch ON r.chamber_id = ch.id " +
-                "JOIN categorie cat ON ch.categorie_id = cat.id " +
                 "UNION ALL " +
-                "SELECT 'Client', " +
-                "CONCAT('New client: ', nom, ' ', prenom), " +
-                "COALESCE(created_at, NOW()) as date " +
+                "SELECT 'New Client' as type, " +
+                "CONCAT(nom, ' ', prenom) as description, " +
+                "NOW() as date " +
                 "FROM client " +
-                "ORDER BY date DESC LIMIT 5";
+                "ORDER BY date DESC LIMIT 10";
 
         try (Connection conn = ConnectionJdbc.getCnx();
                 Statement stmt = conn.createStatement();

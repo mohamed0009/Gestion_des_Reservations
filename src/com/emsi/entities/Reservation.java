@@ -11,6 +11,8 @@ public class Reservation {
     private String status;
     private int chamberId;
     private int clientId;
+    private Client client;
+    private Chamber chamber;
 
     public Reservation() {
         // Default constructor
@@ -86,6 +88,22 @@ public class Reservation {
 
     public void setClientId(int clientId) {
         this.clientId = clientId;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
+    public Chamber getChamber() {
+        return chamber;
+    }
+
+    public void setChamber(Chamber chamber) {
+        this.chamber = chamber;
     }
 
     @Override

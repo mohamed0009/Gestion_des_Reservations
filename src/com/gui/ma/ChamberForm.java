@@ -12,6 +12,8 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import java.awt.*;
 import com.gui.utils.StyleUtils;
+import com.gui.utils.IconUtils;
+import com.emsi.service.CategorieService;
 
 /**
  *
@@ -19,6 +21,7 @@ import com.gui.utils.StyleUtils;
  */
 public class ChamberForm extends javax.swing.JInternalFrame {
     private ChamberService chamberService;
+    private CategorieService categorieService;
     private DefaultTableModel model;
     private JTextField searchField;
 
@@ -27,11 +30,30 @@ public class ChamberForm extends javax.swing.JInternalFrame {
      */
     public ChamberForm() {
         chamberService = new ChamberService();
+        categorieService = new CategorieService();
+
+        // Set basic properties first
+        setTitle("Gestion des Chambres");
+        setResizable(true);
+        setClosable(true);
+        setMaximizable(true);
+        setIconifiable(true);
+        IconUtils.setInternalFrameIcon(this, IconUtils.ROOM_ICON);
+
+        // Initialize components
         initComponents();
         applyStyles();
-        this.setTitle("Gestion des Chambres");
+
+        // Set minimum size
+        setMinimumSize(new Dimension(800, 600));
+
+        // Initialize the table model
         model = (DefaultTableModel) listeclient.getModel();
         load();
+
+        // Pack and set size after all components are initialized
+        pack();
+        setSize(800, 600);
 
         // Add row selection listener
         listeclient.getSelectionModel().addListSelectionListener(e -> {
@@ -201,6 +223,7 @@ public class ChamberForm extends javax.swing.JInternalFrame {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
+    // <editor-fold defaultstate="collapsed" desc="Generated
     // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -222,7 +245,6 @@ public class ChamberForm extends javax.swing.JInternalFrame {
         setMaximizable(true);
         setResizable(true);
 
-        jPanel3.setBackground(new java.awt.Color(153, 255, 204));
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Table Chambers"));
 
         listeclient.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -271,7 +293,6 @@ public class ChamberForm extends javax.swing.JInternalFrame {
                                         javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(30, 30, 30)));
 
-        jPanel2.setBackground(new java.awt.Color(153, 255, 204));
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("New Chamber"));
 
         jLabel3.setText("Telephone :");

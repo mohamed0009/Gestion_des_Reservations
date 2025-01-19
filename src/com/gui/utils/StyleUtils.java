@@ -1,6 +1,7 @@
 package com.gui.utils;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import com.toedter.calendar.JDateChooser;
 
@@ -9,11 +10,12 @@ public class StyleUtils {
     public static final Color BACKGROUND_COLOR = new Color(247, 248, 252);
     public static final Color BORDER_COLOR = new Color(203, 213, 225);
     public static final Color TEXT_COLOR = new Color(71, 85, 105);
-    public static final Color PRIMARY_COLOR = new Color(79, 70, 229); // Modern indigo
+    public static final Color PRIMARY_COLOR = new Color(65, 105, 225); // Royal Blue
     public static final Color SECONDARY_COLOR = new Color(100, 116, 139); // Modern slate
-    public static final Color SUCCESS_COLOR = new Color(34, 197, 94); // Modern green
-    public static final Color DANGER_COLOR = new Color(239, 68, 68); // Modern red
-    public static final Color PANEL_BACKGROUND = Color.WHITE;
+    public static final Color SUCCESS_COLOR = new Color(46, 139, 87); // Sea Green
+    public static final Color DANGER_COLOR = new Color(220, 20, 60); // Crimson
+    public static final Color INFO_COLOR = new Color(30, 144, 255); // Dodger Blue
+    public static final Color PANEL_BACKGROUND = new Color(245, 245, 245);
 
     // Fonts
     public static final Font DEFAULT_FONT = new Font("Segoe UI", Font.PLAIN, 14);
